@@ -88,7 +88,7 @@ The skill also includes a final "obviously AI generated" audit pass and a second
 
 > "LLMs use statistical algorithms to guess what should come next. The result tends toward the most statistically likely result that applies to the widest variety of cases."
 
-## 29 Patterns Detected (with Before/After Examples)
+## 34 Patterns Detected (with Before/After Examples)
 
 ### Content Patterns
 
@@ -143,6 +143,16 @@ The skill also includes a final "obviously AI generated" audit pass and a second
 | 23 | **Filler phrases** | "In order to", "Due to the fact that" | "To", "Because" |
 | 24 | **Excessive hedging** | "could potentially possibly" | "may" |
 | 25 | **Generic conclusions** | "The future looks bright" | Specific plans or facts |
+
+### Artifacts and Contamination
+
+| # | Pattern | Before | After |
+|---|---------|--------|-------|
+| 30 | **Reference-markup artifacts** | "...modern history `turn0search0`" / `?utm_source=chatgpt.com` | Strip the markup; add a real citation if needed |
+| 31 | **Placeholder text** | "Founded in [YEAR], [COMPANY] is..." / `2025-xx-xx` | Fill in or delete the sentence |
+| 32 | **Markdown / wikitext contamination** | ```` ```markdown ```` fences, "Would you like me to convert..." | Remove the fence and meta-prompt |
+| 33 | **"Conclusion" closers** | "## Conclusion" + paragraph restating the body | Delete the section |
+| 34 | **Didactic disclaimers** | "It's important to note that...", "as always, consult a professional" | Drop unless legally required |
 
 ## Full Example
 

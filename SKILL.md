@@ -461,6 +461,107 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 >
 > When users hit a slow page, they leave.
 
+
+## ARTIFACTS AND CONTAMINATION
+
+These patterns appear when someone copies text out of a chat UI and pastes it without scrubbing. They do not occur in genuinely human-written text — when present, AI involvement is essentially confirmed. Always strip them entirely.
+
+### 30. Reference-Markup Artifacts
+
+**Tokens to watch:**
+- ChatGPT: `turn0search0`, `citeturn0search0`, `citeturn0news0`, `iturn0image0`, `0`, `:contentReference[oaicite:0]{index=0}`, `oai_citation`, `Example+1`
+- Perplexity: `[web:1]`, `[attached_file:1]`
+- Grok: `<grok_card>` XML tags, `referrer=grok.com`
+- Microsoft Copilot: `utm_source=copilot.com`
+- ChatGPT URL parameters: `?utm_source=chatgpt.com`, `?utm_source=openai`
+- Cite escapes: `({"attribution":{"attributableIndex":"X-Y"}})`
+
+**Problem:** When a chatbot inlines a citation into its rendered output and the user copies the visible text, the citation becomes broken markup pointing at a chat-internal search index. These artifacts are dead giveaways.
+
+**Before:**
+> The 2024 election turned on three states turn0search0, with margins under 1% in each0. Analysts have called it the closest race in modern history :contentReference[oaicite:2]{index=2}.
+
+**After:**
+> The 2024 election turned on three states, with margins under 1% in each. Analysts have called it the closest race in modern history. [Add a real citation here, or remove the claim.]
+
+**Before (utm_source pollution):**
+> See the [official report](https://example.com/report?utm_source=chatgpt.com) for details.
+
+**After:**
+> See the [official report](https://example.com/report) for details.
+
+
+### 31. Phrasal Templates and Placeholder Text
+
+**Tokens to watch:** `[INSERT NAME]`, `[YOUR BRAND HERE]`, `[ADD CITATION]`, `[Year]`, `2025-xx-xx`, `XXXX`, `___`, `<placeholder>`, "fill in the blank"
+
+**Problem:** LLMs often produce Mad-Libs-style templates with placeholders meant to be replaced. Users sometimes paste them in raw. Date placeholders like `2025-xx-xx` are especially common in citation `access-date` fields.
+
+**Before:**
+> Founded in [YEAR], [COMPANY NAME] is a leading provider of [INDUSTRY] solutions. Accessed 2025-xx-xx.
+
+**After:**
+> Founded in 2014, Acme Robotics builds warehouse automation systems. Accessed 1 May 2026.
+
+If you do not know the value, delete the sentence rather than ship the placeholder.
+
+
+### 32. Markdown / Wikitext Contamination
+
+**Signs to watch:**
+- Triple-backtick fences left in prose: ` ```markdown `, ` ```wikitext `, ` ``` `
+- Meta-prompts the chatbot wrote to *itself*: "Would you like me to convert this to ___?", "Here is the formatted version:", "I have rewritten the section as requested"
+- Mixed `##` headings inside what should be a Wikipedia / wiki / plain-text document
+- Lone `---` thematic breaks placed before every heading (Markdown export habit)
+- Triple backticks around inline content that wasn't supposed to be code
+
+**Problem:** The chat UI rendered the Markdown; the underlying text the user copied still has the syntax characters. When that gets pasted into a non-Markdown destination (or into a Markdown destination with a different convention), it shows up as literal junk or unwanted formatting.
+
+**Before:**
+> ```markdown
+> ## Background
+> ---
+> The company was founded in 1994.
+> ```
+> Would you like me to expand the Background section, add citations, or convert this into wikitext?
+
+**After:**
+> ## Background
+>
+> The company was founded in 1994.
+
+
+### 33. Section Summaries and Formal "Conclusion" Closers
+
+**Headings to watch:** `Conclusion`, `In conclusion`, `Summary`, `Final Thoughts`, `Key Takeaways`, `Wrapping Up`
+
+**Problem:** Older LLMs (and a surprising number of newer ones, especially when asked to "write an article") end with a formal section that restates the body in slightly different words. Unlike §25 (generic positive conclusions), this is a structural tic — the *existence* of the section is the tell, even if the content is fine. In modern essay writing the conclusion is implicit; you stop when you have made your point.
+
+**Before:**
+> ## Conclusion
+>
+> In conclusion, the three states discussed above — Pennsylvania, Wisconsin, and Michigan — were decisive in the 2024 election. As we have seen, narrow margins, demographic shifts, and turnout patterns combined to produce one of the closest races in modern American history. Understanding these dynamics is essential for anyone seeking to interpret the result.
+
+**After:**
+> [Delete the section. The body already made the point.]
+
+If a closing thought is genuinely necessary, write a single sentence with new information ("The same three states will probably decide 2028.") rather than a recap.
+
+
+### 34. Didactic Disclaimers
+
+**Phrases to watch:** It's important to note that, It's worth noting that, Keep in mind that, It should be remembered that, As always, please consult a professional, This is not [legal/medical/financial] advice
+
+**Problem:** A signature of the GPT-3.5 / early GPT-4 era. The model interjects safety reminders and meta-commentary into ordinary expository prose. Newer models do this less, but it still leaks through, especially in any topic adjacent to health, law, finance, or controversy.
+
+**Before:**
+> It is important to note that interest rates can change, and what is true today may not be true tomorrow. As always, please consult a qualified financial advisor before making investment decisions. With that said, the Fed's December meeting cut the federal funds rate by 25 basis points.
+
+**After:**
+> The Fed cut the federal funds rate by 25 basis points at its December meeting.
+
+Skip the disclaimer unless the document is the kind that legitimately requires one (a regulatory filing, terms of service, a literal advice column). Even then, the disclaimer belongs in a footer or sidebar, not woven through the body.
+
 ---
 
 ## Process
