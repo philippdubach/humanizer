@@ -1,13 +1,17 @@
 ---
 name: humanizer
-version: 2.5.1
+version: 2.6.0
 description: |
   Remove signs of AI-generated writing from text. Use when editing or reviewing
   text to make it sound more natural and human-written. Based on Wikipedia's
-  comprehensive "Signs of AI writing" guide. Detects and fixes patterns including:
-  inflated symbolism, promotional language, superficial -ing analyses, vague
-  attributions, em dash overuse, rule of three, AI vocabulary words, passive
-  voice, negative parallelisms, and filler phrases.
+  comprehensive "Signs of AI writing" guide (2026 revision). Detects and fixes
+  patterns including: inflated symbolism, promotional language, superficial -ing
+  analyses, vague attributions, em dash overuse, rule of three, era-specific AI
+  vocabulary, passive voice, negative parallelisms, filler phrases, speculative
+  gap-filling, reference-markup artifacts (turn0search0, oaicite, utm_source),
+  leftover placeholders, fenced-code-block contamination, and formal "Conclusion"
+  closers. Also includes detection guidance for false positives and signs of
+  genuine human writing to preserve.
 license: MIT
 compatibility: claude-code opencode
 allowed-tools:
@@ -173,9 +177,17 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 ### 7. Overused "AI Vocabulary" Words
 
-**High-frequency AI words:** Actually, additionally, align with, crucial, delve, emphasizing, enduring, enhance, fostering, garner, highlight (verb), interplay, intricate/intricacies, key (adjective), landscape (abstract noun), pivotal, showcase, tapestry (abstract noun), testament, underscore (verb), valuable, vibrant
+**High-frequency AI words:** Actually, additionally, align with, bolstered, crucial, delve, emphasizing, enduring, enhance, fostering, garner, highlight (verb), interplay, intricate/intricacies, key (adjective), landscape (abstract noun), meticulous/meticulously, pivotal, showcase, tapestry (abstract noun), testament, underscore (verb), valuable, vibrant
 
-**Problem:** These words appear far more frequently in post-2023 text. They often co-occur.
+**Problem:** These words appear far more frequently in post-2023 text. They often co-occur — where there's one, there are usually others. One or two in an edit may be coincidence; many in the same passage is one of the strongest tells.
+
+**Era-specific clusters** (the vocabulary has shifted over time, useful for dating suspect text):
+
+- **2023 to mid-2024 (GPT-4 era):** *additionally*, *boasts*, *bolstered*, *crucial*, *delve*, *emphasizing*, *enduring*, *garner*, *intricate/intricacies*, *interplay*, *key*, *landscape*, *meticulous/meticulously*, *pivotal*, *underscore*, *tapestry*, *testament*, *valuable*, *vibrant*
+- **Mid-2024 to mid-2025 (GPT-4o era):** *align with*, *bolstered*, *crucial*, *emphasizing*, *enhance*, *enduring*, *fostering*, *highlighting*, *pivotal*, *showcasing*, *underscore*, *vibrant*
+- **Mid-2025 onward (GPT-5 era):** *emphasizing*, *enhance*, *highlighting*, *showcasing* (plus heavier reliance on notability/media-coverage padding — see §2)
+
+Keep context in mind: *underscore* can mean a literal underline; *delve* may be a perfectly fine verb in geology. Flag the figurative, throat-clearing use, not the literal one.
 
 **Before:**
 > Additionally, a distinctive feature of Somali cuisine is the incorporation of camel meat. An enduring testament to Italian colonial influence is the widespread adoption of pasta in the local culinary landscape, showcasing how these dishes have integrated into the traditional diet.
@@ -345,17 +357,23 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 > The French Revolution began in 1789 when financial crisis and food shortages led to widespread unrest.
 
 
-### 21. Knowledge-Cutoff Disclaimers
+### 21. Knowledge-Cutoff Disclaimers and Speculative Gap-Filling
 
-**Words to watch:** as of [date], Up to my last training update, While specific details are limited/scarce..., based on available information...
+**Words to watch:** as of [date], Up to my last training update, While specific details are limited/scarce..., based on available information, not extensively documented, not publicly available, maintains a low profile, keeps personal details private, prefers to keep [X] out of the spotlight, likely [verb], it is believed that
 
-**Problem:** AI disclaimers about incomplete information get left in text.
+**Problem:** Two related patterns. (a) Older models leave hard knowledge-cutoff disclaimers in the text. (b) Newer retrieval-augmented models, when they can't find a source, write a paragraph *about not having found one*, then speculate about what the missing information "likely" is. When the gap is about a private person, the speculation almost always settles on the same template: this person "maintains a low profile" or "keeps personal details private" — neither claim is sourced; both are face-saving filler.
 
-**Before:**
+**Before (cutoff disclaimer):**
 > While specific details about the company's founding are not extensively documented in readily available sources, it appears to have been established sometime in the 1990s.
 
 **After:**
 > The company was founded in 1994, according to its registration documents.
+
+**Before (speculative gap-fill about a person):**
+> Information about her early life is not publicly available, suggesting she maintains a low profile and keeps personal details private. She likely grew up in a middle-class household, which would have shaped her later interest in education reform.
+
+**After:**
+> Her early life is not documented in the sources used here. (Or simply omit the section.)
 
 
 ### 22. Sycophantic/Servile Tone
@@ -461,6 +479,154 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 >
 > When users hit a slow page, they leave.
 
+## ARTIFACTS AND CONTAMINATION
+
+These patterns appear when someone copies text out of a chat UI and pastes it without scrubbing. They do not occur in genuinely human-written text — when present, AI involvement is essentially confirmed. Always strip them entirely.
+
+### 30. Reference-Markup Artifacts
+
+**Tokens to watch:**
+- ChatGPT: `turn0search0`, `citeturn0search0`, `citeturn0news0`, `iturn0image0`, `0`, `:contentReference[oaicite:0]{index=0}`, `oai_citation`, `Example+1`
+- Perplexity: `[web:1]`, `[attached_file:1]`
+- Grok: `<grok_card>` XML tags, `referrer=grok.com`
+- Microsoft Copilot: `utm_source=copilot.com`
+- ChatGPT URL parameters: `?utm_source=chatgpt.com`, `?utm_source=openai`
+- Cite escapes: `({"attribution":{"attributableIndex":"X-Y"}})`
+
+**Problem:** When a chatbot inlines a citation into its rendered output and the user copies the visible text, the citation becomes broken markup pointing at a chat-internal search index. These artifacts are dead giveaways.
+
+**Before:**
+> The 2024 election turned on three states turn0search0, with margins under 1% in each0. Analysts have called it the closest race in modern history :contentReference[oaicite:2]{index=2}.
+
+**After:**
+> The 2024 election turned on three states, with margins under 1% in each. Analysts have called it the closest race in modern history. [Add a real citation here, or remove the claim.]
+
+**Before (utm_source pollution):**
+> See the [official report](https://example.com/report?utm_source=chatgpt.com) for details.
+
+**After:**
+> See the [official report](https://example.com/report) for details.
+
+
+### 31. Phrasal Templates and Placeholder Text
+
+**Tokens to watch:** `[INSERT NAME]`, `[YOUR BRAND HERE]`, `[ADD CITATION]`, `[Year]`, `2025-xx-xx`, `XXXX`, `___`, `<placeholder>`, "fill in the blank"
+
+**Problem:** LLMs often produce Mad-Libs-style templates with placeholders meant to be replaced. Users sometimes paste them in raw. Date placeholders like `2025-xx-xx` are especially common in citation `access-date` fields.
+
+**Before:**
+> Founded in [YEAR], [COMPANY NAME] is a leading provider of [INDUSTRY] solutions. Accessed 2025-xx-xx.
+
+**After:**
+> Founded in 2014, Acme Robotics builds warehouse automation systems. Accessed 1 May 2026.
+
+If you do not know the value, delete the sentence rather than ship the placeholder.
+
+
+### 32. Markdown / Wikitext Contamination
+
+**Signs to watch:**
+- Triple-backtick fences left in prose: ` ```markdown `, ` ```wikitext `, ` ``` `
+- Meta-prompts the chatbot wrote to *itself*: "Would you like me to convert this to ___?", "Here is the formatted version:", "I have rewritten the section as requested"
+- Mixed `##` headings inside what should be a Wikipedia / wiki / plain-text document
+- Lone `---` thematic breaks placed before every heading (Markdown export habit)
+- Triple backticks around inline content that wasn't supposed to be code
+
+**Problem:** The chat UI rendered the Markdown; the underlying text the user copied still has the syntax characters. When that gets pasted into a non-Markdown destination (or into a Markdown destination with a different convention), it shows up as literal junk or unwanted formatting.
+
+**Before:**
+> ```markdown
+> ## Background
+> ---
+> The company was founded in 1994.
+> ```
+> Would you like me to expand the Background section, add citations, or convert this into wikitext?
+
+**After:**
+> ## Background
+>
+> The company was founded in 1994.
+
+
+### 33. Section Summaries and Formal "Conclusion" Closers
+
+**Headings to watch:** `Conclusion`, `In conclusion`, `Summary`, `Final Thoughts`, `Key Takeaways`, `Wrapping Up`
+
+**Problem:** Older LLMs (and a surprising number of newer ones, especially when asked to "write an article") end with a formal section that restates the body in slightly different words. Unlike §25 (generic positive conclusions), this is a structural tic — the *existence* of the section is the tell, even if the content is fine. In modern essay writing the conclusion is implicit; you stop when you have made your point.
+
+**Before:**
+> ## Conclusion
+>
+> In conclusion, the three states discussed above — Pennsylvania, Wisconsin, and Michigan — were decisive in the 2024 election. As we have seen, narrow margins, demographic shifts, and turnout patterns combined to produce one of the closest races in modern American history. Understanding these dynamics is essential for anyone seeking to interpret the result.
+
+**After:**
+> [Delete the section. The body already made the point.]
+
+If a closing thought is genuinely necessary, write a single sentence with new information ("The same three states will probably decide 2028.") rather than a recap.
+
+
+### 34. Didactic Disclaimers
+
+**Phrases to watch:** It's important to note that, It's worth noting that, Keep in mind that, It should be remembered that, As always, please consult a professional, This is not [legal/medical/financial] advice
+
+**Problem:** A signature of the GPT-3.5 / early GPT-4 era. The model interjects safety reminders and meta-commentary into ordinary expository prose. Newer models do this less, but it still leaks through, especially in any topic adjacent to health, law, finance, or controversy.
+
+**Before:**
+> It is important to note that interest rates can change, and what is true today may not be true tomorrow. As always, please consult a qualified financial advisor before making investment decisions. With that said, the Fed's December meeting cut the federal funds rate by 25 basis points.
+
+**After:**
+> The Fed cut the federal funds rate by 25 basis points at its December meeting.
+
+Skip the disclaimer unless the document is the kind that legitimately requires one (a regulatory filing, terms of service, a literal advice column). Even then, the disclaimer belongs in a footer or sidebar, not woven through the body.
+
+
+---
+
+## DETECTION GUIDANCE
+
+### What NOT to flag (false positives)
+
+A clean human writer can hit several of the patterns above without any AI involvement. Before rewriting, sanity-check that you are not gutting legitimate prose. The following are *not* reliable indicators on their own:
+
+- **Perfect grammar and consistent style.** Many writers are professionals or have been edited. Polish does not equal AI.
+- **Mixed casual and formal registers.** This often signals a person in a technical field, a young writer, or someone with neurodivergent prose habits — not a chatbot.
+- **"Bland" or "robotic" prose.** AI prose has *specific* tells. Generic dryness without those tells is just dry writing.
+- **Formal or academic vocabulary.** AI overuses *specific* fancy words (see §7), not all fancy words. Don't flatten "ostensibly" or "constituent" just because they sound brainy.
+- **Letter-style opening or closing on a comment.** Salutations and sign-offs predate ChatGPT by centuries.
+- **Common transition words in isolation.** *Additionally*, *moreover*, *consequently* are AI-coded only when piled up. One *however* is not a tell.
+- **Curly quotes alone.** macOS, Word, Google Docs, and most CMSes auto-curl by default. Curly quotes only count when stacked with other tells.
+- **Em dashes alone.** Many editors and journalists use them often. Em dashes are evidence only when paired with formulaic sales-y rhythm.
+- **Unsourced claims.** Most of the web is unsourced. Lack of citations doesn't prove anything.
+- **Correct, complex formatting.** Visual editors and templates produce clean wikitext / HTML / markdown without any AI.
+
+When in doubt, look for **clusters** of tells, not isolated ones. A single em dash means nothing; em dashes plus rule-of-three plus *vibrant tapestry* plus a "Conclusion" section is a confession.
+
+
+### Signs of human writing (preserve these)
+
+When you see these, lean toward leaving the prose alone — they are evidence of a real person writing, and over-editing will destroy what makes the piece sound human:
+
+- **Specific, unusual, hard-to-fabricate detail.** A real address. A weird quote. The phrase "the lawyer who used to work upstairs from my dentist." LLMs round off specifics; humans hoard them.
+- **Mixed feelings and unresolved tension.** "I think this is mostly good, but it bothers me, and I can't fully explain why." LLMs default to clean takes.
+- **Dated, era-bound references.** Slang, memes, or in-jokes that map to a specific year and subculture. Models lag by a year or more.
+- **First-person editorial choices the writer can defend.** If the writer can explain *why* they made a particular cut or used a particular word, that's a strong human signal.
+- **Variety in sentence length.** Real writing alternates short and long. AI writing tends toward an even, mid-length cadence.
+- **Genuine asides, parentheticals, or self-corrections.** "(I keep wanting to say 'almost' here, but it really was certain.)" Models rarely interrupt themselves like this.
+- **Edits made before November 30, 2022.** ChatGPT's public launch. Anything older than that is, with very rare exceptions, not AI-written.
+
+
+### LLM Idiolects (which model wrote this?)
+
+Each model family writes a little differently. Useful when triaging a suspected passage:
+
+- **ChatGPT (GPT-4 / 4o / 5):** Most prevalent. Heavy on broader-context throat-clearing, "evolving landscape," media-coverage padding. Most likely to leave artifacts (`turn0search0`, `oaicite`). Most likely to use em dashes (suppressed in 5.1 but still leaks through).
+- **Grok:** Similar to ChatGPT in verbosity and broader-context framing. Leaves `<grok_card>` tags and `referrer=grok.com`.
+- **Gemini (1.5–3 Pro):** More concise than ChatGPT. Avoids curly quotes by default. Less prone to "broader trends" puffery.
+- **Claude (3.5–Opus 4.x):** Concise. Avoids curly quotes by default. Tends toward direct expository style; less likely to insert "It's important to note that..." but can fall into rule-of-three and inline-header lists when doing structured output.
+
+These are tendencies, not rules. All four families produce all the patterns in this guide given the right prompt.
+
+
 ---
 
 ## Process
@@ -554,6 +720,8 @@ Provide:
 
 ## Reference
 
-This skill is based on [Wikipedia:Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing), maintained by WikiProject AI Cleanup. The patterns documented there come from observations of thousands of instances of AI-generated text on Wikipedia.
+This skill is based on [Wikipedia:Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing), maintained by WikiProject AI Cleanup. The patterns documented there come from observations of thousands of instances of AI-generated text on Wikipedia. A local snapshot of the article (fetched 2026-05-01) is kept at `signs_of_ai_writing.md` alongside this skill's working notes.
 
 Key insight from Wikipedia: "LLMs use statistical algorithms to guess what should come next. The result tends toward the most statistically likely result that applies to the widest variety of cases."
+
+A second insight, equally important when *editing*: clusters matter, isolated signs don't. One em dash, one *additionally*, one curly quote — none of these prove anything. The same five within a paragraph almost certainly do.

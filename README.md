@@ -88,7 +88,7 @@ The skill also includes a final "obviously AI generated" audit pass and a second
 
 > "LLMs use statistical algorithms to guess what should come next. The result tends toward the most statistically likely result that applies to the widest variety of cases."
 
-## 29 Patterns Detected (with Before/After Examples)
+## 34 Patterns Detected (with Before/After Examples)
 
 ### Content Patterns
 
@@ -133,7 +133,7 @@ The skill also includes a final "obviously AI generated" audit pass and a second
 | # | Pattern | Before | After |
 |---|---------|--------|-------|
 | 20 | **Chatbot artifacts** | "I hope this helps! Let me know if..." | Remove entirely |
-| 21 | **Cutoff disclaimers** | "While details are limited in available sources..." | Find sources or remove |
+| 21 | **Cutoff disclaimers / speculative gap-filling** | "While details are limited..."; "she maintains a low profile" | Find sources or remove |
 | 22 | **Sycophantic tone** | "Great question! You're absolutely right!" | Respond directly |
 
 ### Filler and Hedging
@@ -143,6 +143,18 @@ The skill also includes a final "obviously AI generated" audit pass and a second
 | 23 | **Filler phrases** | "In order to", "Due to the fact that" | "To", "Because" |
 | 24 | **Excessive hedging** | "could potentially possibly" | "may" |
 | 25 | **Generic conclusions** | "The future looks bright" | Specific plans or facts |
+
+### Artifacts and Contamination
+
+| # | Pattern | Before | After |
+|---|---------|--------|-------|
+| 30 | **Reference-markup artifacts** | "...modern history `turn0search0`" / `?utm_source=chatgpt.com` | Strip the markup; add a real citation if needed |
+| 31 | **Placeholder text** | "Founded in [YEAR], [COMPANY] is..." / `2025-xx-xx` | Fill in or delete the sentence |
+| 32 | **Markdown / wikitext contamination** | ```` ```markdown ```` fences, "Would you like me to convert..." | Remove the fence and meta-prompt |
+| 33 | **"Conclusion" closers** | "## Conclusion" + paragraph restating the body | Delete the section |
+| 34 | **Didactic disclaimers** | "It's important to note that...", "as always, consult a professional" | Drop unless legally required |
+
+The skill also includes a **Detection Guidance** section covering false positives (what NOT to flag), signs of human writing to preserve, and per-model idiolects.
 
 ## Full Example
 
@@ -179,6 +191,7 @@ The skill also includes a final "obviously AI generated" audit pass and a second
 
 ## Version History
 
+- **2.6.0** - Added era-aware AI vocabulary breakdown (GPT-4 / 4o / 5), expanded §21 to cover speculative gap-filling, added 5 new patterns (§30–34: reference-markup artifacts, placeholders, Markdown contamination, "Conclusion" closers, didactic disclaimers), and a Detection Guidance group (false positives, signs of human writing, LLM idiolects). Pattern count: 29 → 34.
 - **2.5.1** - Added a passive-voice / subjectless-fragment rule, raising the total to 29 patterns
 - **2.5.0** - Added patterns for persuasive framing, signposting, and fragmented headers; expanded negative parallelisms to cover tailing negations; tightened wording around em dash overuse; fixed frontmatter wording to use "filler phrases"
 - **2.4.0** - Added voice calibration: match the user's personal writing style from samples
