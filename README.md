@@ -133,7 +133,7 @@ The skill also includes a final "obviously AI generated" audit pass and a second
 | # | Pattern | Before | After |
 |---|---------|--------|-------|
 | 20 | **Chatbot artifacts** | "I hope this helps! Let me know if..." | Remove entirely |
-| 21 | **Cutoff disclaimers** | "While details are limited in available sources..." | Find sources or remove |
+| 21 | **Cutoff disclaimers / speculative gap-filling** | "While details are limited..."; "she maintains a low profile" | Find sources or remove |
 | 22 | **Sycophantic tone** | "Great question! You're absolutely right!" | Respond directly |
 
 ### Filler and Hedging

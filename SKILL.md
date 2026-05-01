@@ -173,9 +173,17 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 ### 7. Overused "AI Vocabulary" Words
 
-**High-frequency AI words:** Actually, additionally, align with, crucial, delve, emphasizing, enduring, enhance, fostering, garner, highlight (verb), interplay, intricate/intricacies, key (adjective), landscape (abstract noun), pivotal, showcase, tapestry (abstract noun), testament, underscore (verb), valuable, vibrant
+**High-frequency AI words:** Actually, additionally, align with, bolstered, crucial, delve, emphasizing, enduring, enhance, fostering, garner, highlight (verb), interplay, intricate/intricacies, key (adjective), landscape (abstract noun), meticulous/meticulously, pivotal, showcase, tapestry (abstract noun), testament, underscore (verb), valuable, vibrant
 
-**Problem:** These words appear far more frequently in post-2023 text. They often co-occur.
+**Problem:** These words appear far more frequently in post-2023 text. They often co-occur — where there's one, there are usually others. One or two in an edit may be coincidence; many in the same passage is one of the strongest tells.
+
+**Era-specific clusters** (the vocabulary has shifted over time, useful for dating suspect text):
+
+- **2023 to mid-2024 (GPT-4 era):** *additionally*, *boasts*, *bolstered*, *crucial*, *delve*, *emphasizing*, *enduring*, *garner*, *intricate/intricacies*, *interplay*, *key*, *landscape*, *meticulous/meticulously*, *pivotal*, *underscore*, *tapestry*, *testament*, *valuable*, *vibrant*
+- **Mid-2024 to mid-2025 (GPT-4o era):** *align with*, *bolstered*, *crucial*, *emphasizing*, *enhance*, *enduring*, *fostering*, *highlighting*, *pivotal*, *showcasing*, *underscore*, *vibrant*
+- **Mid-2025 onward (GPT-5 era):** *emphasizing*, *enhance*, *highlighting*, *showcasing* (plus heavier reliance on notability/media-coverage padding — see §2)
+
+Keep context in mind: *underscore* can mean a literal underline; *delve* may be a perfectly fine verb in geology. Flag the figurative, throat-clearing use, not the literal one.
 
 **Before:**
 > Additionally, a distinctive feature of Somali cuisine is the incorporation of camel meat. An enduring testament to Italian colonial influence is the widespread adoption of pasta in the local culinary landscape, showcasing how these dishes have integrated into the traditional diet.
@@ -345,17 +353,23 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 > The French Revolution began in 1789 when financial crisis and food shortages led to widespread unrest.
 
 
-### 21. Knowledge-Cutoff Disclaimers
+### 21. Knowledge-Cutoff Disclaimers and Speculative Gap-Filling
 
-**Words to watch:** as of [date], Up to my last training update, While specific details are limited/scarce..., based on available information...
+**Words to watch:** as of [date], Up to my last training update, While specific details are limited/scarce..., based on available information, not extensively documented, not publicly available, maintains a low profile, keeps personal details private, prefers to keep [X] out of the spotlight, likely [verb], it is believed that
 
-**Problem:** AI disclaimers about incomplete information get left in text.
+**Problem:** Two related patterns. (a) Older models leave hard knowledge-cutoff disclaimers in the text. (b) Newer retrieval-augmented models, when they can't find a source, write a paragraph *about not having found one*, then speculate about what the missing information "likely" is. When the gap is about a private person, the speculation almost always settles on the same template: this person "maintains a low profile" or "keeps personal details private" — neither claim is sourced; both are face-saving filler.
 
-**Before:**
+**Before (cutoff disclaimer):**
 > While specific details about the company's founding are not extensively documented in readily available sources, it appears to have been established sometime in the 1990s.
 
 **After:**
 > The company was founded in 1994, according to its registration documents.
+
+**Before (speculative gap-fill about a person):**
+> Information about her early life is not publicly available, suggesting she maintains a low profile and keeps personal details private. She likely grew up in a middle-class household, which would have shaped her later interest in education reform.
+
+**After:**
+> Her early life is not documented in the sources used here. (Or simply omit the section.)
 
 
 ### 22. Sycophantic/Servile Tone
